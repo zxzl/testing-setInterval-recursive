@@ -19,11 +19,41 @@ class SchedulerAsync {
       },
       {
         onRetry: () => {
-          console.info("retrying..");
+          console.info("retrying for func1..");
         },
       }
     );
   }
 }
 
-module.exports = SchedulerAsync;
+class SchedulerAsync2 {
+  constructor(interval, f) {
+    this.interval = interval;
+    this.f = f;
+    this.fire();
+  }
+
+  async fire() {
+    await retry(
+      async () => {
+        // not implemented https://github.com/zeit/async-retry/issues/43
+        var res = await this.f();
+        if (res.status === "STOP") return;
+
+        setTimeout(async () => {
+          await this.fire();
+        }, res.next);
+      },
+      {
+        onRetry: () => {
+          console.info("retrying for func2..");
+        },
+      }
+    );
+  }
+}
+
+module.exports = {
+  SchedulerAsync,
+  SchedulerAsync2,
+};
